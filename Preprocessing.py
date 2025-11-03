@@ -17,24 +17,19 @@ def preprocess_data(filepath="NGSIM_vehicle_trajectory.csv"):
     print("Loading NGSIM data...")
     df = pd.read_csv(filepath)
 
-    # Select and rename columns for consistency
     columns_needed = ['Vehicle_ID', 'Global_X', 'Global_Y', 'v_Vel', 'v_Acc', 'Lane_ID']
     df = df[columns_needed]
     df.columns = ['vehicle_id', 'x_pos', 'y_pos', 'velocity', 'acceleration', 'lane']
 
     print("Calculating relative motion (Δx, Δy)...")
-    # Compute next step for each vehicle
     df_target = df.groupby('vehicle_id')[['x_pos', 'y_pos']].shift(-1)
     df_target.columns = ['next_x', 'next_y']
 
-    # Compute relative motion (Δx, Δy) as the target
     df['dx'] = df_target['next_x'] - df['x_pos']
     df['dy'] = df_target['next_y'] - df['y_pos']
 
-    # Drop rows where next step is not available (end of trajectory)
     df = df.dropna()
 
-    # Define features and target
     features = ['x_pos', 'y_pos', 'velocity', 'acceleration', 'lane']
     target = ['dx', 'dy']
 
@@ -52,23 +47,16 @@ def preprocess_data(filepath="NGSIM_vehicle_trajectory.csv"):
     np.save('X_train_ngsim.npy', X_train)
     np.save('y_train_ngsim.npy', y_train)
     np.save('X_test_ngsim.npy', X_test)
-    np.save('y_test__ngsim.npy', y_test) # Corrected typo from previous versions
+    np.save('y_test__ngsim.npy', y_test) 
     
-    # --- THIS IS THE CRITICAL UPDATE ---
-    # Save the "decoder key" for BOTH inputs (X) and outputs (Y)
-    
-    # For Inputs (X)
     np.save('scaler_X_min.npy', scaler_X.min_)
     np.save('scaler_X_scale.npy', scaler_X.scale_)
     
-    # For Outputs (Y)
     np.save('scaler_y_min.npy', scaler_y.min_)
     np.save('scaler_y_scale.npy', scaler_y.scale_)
-    # --- END OF UPDATE ---
 
     print("✅ Relative motion preprocessing complete. All 4 scaler files saved.")
 
 if __name__ == "__main__":
-    # Assuming 'NGSIM_vehicle_trajectory.csv' is in the same directory
     preprocess_data()
 
